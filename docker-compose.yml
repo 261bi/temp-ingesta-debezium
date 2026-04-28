@@ -4,6 +4,8 @@
 
 
 
+name: cdc
+
 services:
   zookeeper:
     image: debezium/zookeeper:2.7.3.Final
