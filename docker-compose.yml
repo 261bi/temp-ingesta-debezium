@@ -1,0 +1,83 @@
+# objetivo: usar mysql como origen del lab y postgresql como destino limpio
+# https://debezium.io/documentation/reference/2.7/connectors/mysql.html
+# y mantener sincronizados ambos sistemas (Change Data Capture), para esto se necesita un conector de debezium para mysql, y otro sink jdbc para postgresql
+
+
+
+services:
+  zookeeper:
+    image: debezium/zookeeper:2.7.3.Final
+    ports:
+      - "32181:2181"
+
+  mysql:
+    image: mysql:8.0
+    command:
+      - --server-id=223344
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --binlog-row-image=FULL
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+      - --default-authentication-plugin=mysql_native_password
+    ports:
+      - "33306:3306"
+    environment:
+      MYSQL_DATABASE: farmadb
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: cdc_src
+      MYSQL_PASSWORD: cdc_src_pass
+    volumes:
+      - mysql_source_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+
+  kafka:
+    image: debezium/kafka:2.7.3.Final
+    ports:
+      - "39092:9092"
+    environment:
+      ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+      - mysql
+
+  connect:
+    image: debezium/connect:2.7.3.Final
+    ports:
+      - "38083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: "connect_configs"
+      OFFSET_STORAGE_TOPIC: "connect_offsets"
+      STATUS_STORAGE_TOPIC: "connect_statuses"
+    depends_on:
+      - kafka
+      - mysql
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "35432:5432"
+    environment:
+      POSTGRES_DB: farmacia_dw
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_target_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d farmacia_dw"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_target_data:
+  mysql_source_data:

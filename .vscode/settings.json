@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^docker compose exec postgres psql -U cdc_user -d cdc_lab -c \"select count\\(\\*\\) as alumnos from aca_demo\\.alumnos;\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

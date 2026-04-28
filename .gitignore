@@ -1,0 +1,29 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+.idea/
+.vs/
+*.user
+*.suo
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Logs and temp files
+*.log
+tmp/
+temp/
+
+# Local Docker persistence directories
+data/
+volumes/
+mysql-data/
+postgres-data/
+kafka-data/
+connect-data/

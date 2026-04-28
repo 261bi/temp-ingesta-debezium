@@ -1,0 +1,18 @@
+{
+  "connector.class": "io.debezium.connector.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "topics.regex": "farmadb\\.farmadb\\.(familias|clientes|vendedores|categorias|productos|pedidos|pedido_detalles)",
+  "connection.url": "jdbc:postgresql://postgres:5432/farmacia_dw?reWriteBatchedInserts=true",
+  "connection.username": "postgres",
+  "connection.password": "postgres",
+  "insert.mode": "upsert",
+  "delete.enabled": "true",
+  "primary.key.mode": "record_key",
+  "schema.evolution": "basic",
+  "database.time_zone": "UTC",
+  "quote.identifiers": "false",
+  "table.name.format": "raw.${source.table}",
+  "use.reduction.buffer": "true",
+  "batch.size": "1000",
+  "hibernate.c3p0.idle_test_period": "300"
+}
