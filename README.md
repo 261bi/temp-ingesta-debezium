@@ -51,6 +51,7 @@ El archivo [docker-compose.yml](c:/261bigdata/cdc/docker-compose.yml) levanta es
 - Zookeeper
 - MySQL 8 de laboratorio como origen simulado
 - Kafka
+- Kafka UI para revisar brokers, topics y mensajes desde el navegador
 - Kafka Connect con Debezium
 - PostgreSQL de laboratorio como destino de pruebas
 - script MySQL para poblar `farmadb` como origen del lab
@@ -61,6 +62,7 @@ Versiones actuales:
 - `debezium/zookeeper:2.7.3.Final`
 - `debezium/kafka:2.7.3.Final`
 - `debezium/connect:2.7.3.Final`
+- `provectuslabs/kafka-ui:v0.7.2`
 
 ## Qué hace este stack
 
@@ -234,6 +236,29 @@ Puerto expuesto:
 
 - `39092`
 
+### Kafka UI
+
+Interfaz web para inspeccionar el cluster Kafka del laboratorio.
+
+Imagen usada:
+
+- `provectuslabs/kafka-ui:v0.7.2`
+
+Puerto expuesto:
+
+- `38085`
+
+Acceso desde el navegador:
+
+- http://localhost:38085
+
+Configuración del cluster dentro del compose:
+
+- nombre del cluster: `cdc-local`
+- bootstrap server interno: `kafka:9092`
+
+Nota: este Kafka sigue usando Zookeeper porque la imagen de Debezium Kafka usada en el laboratorio es `debezium/kafka:2.7.3.Final`. Kafka UI solo se conecta al broker por `kafka:9092`; no reemplaza ni elimina Zookeeper.
+
 ### Kafka Connect / Debezium
 
 Es el runtime donde se registran conectores como:
@@ -294,6 +319,12 @@ Para ver logs de Connect:
 
 ```powershell
 docker compose logs -f connect
+```
+
+Para abrir Kafka UI:
+
+```text
+http://localhost:38085
 ```
 
 Para detener todo:
@@ -377,6 +408,12 @@ Ver eventos de una tabla, por ejemplo `familias`:
 docker exec cdc-kafka-1 bash -lc "kafka-console-consumer.sh --bootstrap-server kafka:9092 --topic farmadb.farmadb.familias --from-beginning"
 ```
 
+También puedes revisar topics y mensajes desde Kafka UI:
+
+```text
+http://localhost:38085
+```
+
 Si el source quedó activo, aquí verás los eventos del snapshot inicial y luego los cambios nuevos.
 
 ### 6. Poblar PostgreSQL manualmente cuando tú decidas
@@ -454,9 +491,10 @@ Validaciones básicas:
 2. Confirmar que MySQL responde en `localhost:33306`.
 3. Verificar que Kafka Connect responde en `http://localhost:38083/`.
 4. Confirmar que el endpoint de conectores responde en `http://localhost:38083/connectors`.
-5. Confirmar que PostgreSQL responde y que no tiene tablas de negocio antes de registrar el sink.
-6. Registrar conectores y validar que PostgreSQL empieza a crear tablas destino.
-7. Validar que el snapshot inicial copie las tablas de `farmadb` hacia PostgreSQL.
+5. Abrir Kafka UI en `http://localhost:38085` y confirmar que aparece el cluster `cdc-local`.
+6. Confirmar que PostgreSQL responde y que no tiene tablas de negocio antes de registrar el sink.
+7. Registrar conectores y validar que PostgreSQL empieza a crear tablas destino.
+8. Validar que el snapshot inicial copie las tablas de `farmadb` hacia PostgreSQL.
 
 Ejemplo:
 
